@@ -147,6 +147,7 @@ export const useSimulation = (
 
    // --- 2. THE REROUTER ---
    useEffect(() => {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setPlanes((current) =>
          current.map((plane) => {
             const nextIdx = plane.currentStep + 1;
@@ -204,7 +205,7 @@ export const useSimulation = (
                const moved = prevPlanes.map((p) => {
                   // IF HOLDING: Return the plane as is (no progress update)
                   if (p.isHolding) return p;
-                  let { currentStep, progress, path } = p;
+                  let { currentStep, progress,  } = p;
                   progress += speed * deltaTime;
                   if (progress >= 1) {
                      progress = 0;
@@ -254,6 +255,7 @@ export const useSimulation = (
             });
          }
          lastTimeRef.current = time;
+         // eslint-disable-next-line react-hooks/immutability
          requestRef.current = requestAnimationFrame(animate);
       },
       [gameOver, initialAirports]
