@@ -1,73 +1,64 @@
-# React + TypeScript + Vite
+# NAMA TRACON Simulator v1.0
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A high-fidelity Air Traffic Control (ATC) simulation focused on the Nigerian Airspace Management Agency's (NAMA) Terminal Radar Approach Control (TRACON). This simulator utilizes Dijkstra's Algorithm for real-time pathfinding and rerouting of domestic Nigerian flights.
 
-Currently, two official plugins are available:
+## 🚀 Overview
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+The simulator challenges you to manage the Nigerian airspace. As flights spawn automatically between major Nigerian cities (Lagos, Abuja, Kano, etc.), you must ensure they reach their destinations safely. Mid-air collisions end the simulation.
 
-## React Compiler
+### Key Features
+- **Dynamic Pathfinding:** Uses Dijkstra's algorithm to calculate the most efficient route based on distance and sector congestion.
+- **Real-time Rerouting:** Close a sector (route) to force aircraft to find alternative paths instantly.
+- **ATC Emergency Tools:** - **Hold:** Pause a specific aircraft for 3.5 seconds to manage separation.
+  - **Sector Management:** Adjust sector speed (congestion) or close routes entirely to prevent bottlenecks.
+- **Collision Engine:** Precision-based distance checking with a game-over fail state and scoring system.
+- **Localized Map:** Accurately scaled coordinates for 10 Nigerian airports, including the crowded Niger Delta cluster.
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## 🛠 Tech Stack
+- **Framework:** React 19 & Vite
+- **Language:** TypeScript
+- **Styling:** Tailwind CSS 4.2 (Oxide Engine)
+- **Algorithm:** Custom Dijkstra's Implementation
+- **Icons/UI:** Custom SVG-based Radar Display
 
-## Expanding the ESLint configuration
+## 📂 Project Structure
+- `/src/hooks/useSimulation.ts`: The central game engine (Animation loop, collision logic, spawner).
+- `/src/lib/dijkstra.ts`: The pathfinding logic.
+- `/src/components/Map.tsx`: The SVG-based radar display.
+- `/src/types/index.ts`: TypeScript interfaces for Airports, Routes, and Planes.
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+## 🎮 How to Play
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+1. **Watch the Radar:** New flights spawn every 3.5 seconds.
+2. **Monitor the Strips:** The right sidebar shows active flight strips. The top "Priority Bay" allows for emergency **Hold** actions.
+3. **Manage Sectors:** If two planes are converging on the same point (e.g., Abuja), use the **Sector Control** sliders to slow one down, or click **Close Sector** to force a detour.
+4. **Auto-Reopen:** Closed sectors automatically reopen after 15 seconds to prevent total gridlock.
+5. **Global Reset:** Use the "Clear All Restrictions" button to reset the entire map to 1.0x speed and open all routes.
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+## 💻 Installation & Setup
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+1. **Clone the repository:**
+   ```
+   git clone [https://github.com/your-username/atc-simulator.git](https://github.com/your-username/atc-simulator.git)
+   cd atc-simulator
+    ```
+
+2. **Install dependencies:**
+
+```
+npm install
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+3. **Start the development server:**
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
 ```
+npm run dev
+```
+
+## 🗺 Airport Network (Nigeria)
+Primary Hubs: Lagos (LOS), Abuja (ABV), Kano (KAN), Port Harcourt (PHC).
+
+Secondary Nodes: Enugu (ENU), Ilorin (QRW), Owerri (QOW), Uyo (QUO), Asaba (ABB), Katsina (DKA), Jos (JOS).
+
+---
+Feel free to use and modify for educational purposes.

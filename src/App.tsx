@@ -49,7 +49,9 @@ const App: React.FC = () => {
     setCongestion,
     spawnPlane,
     clearRestrictions,
-    toggleHold
+    toggleHold,
+    isPaused,
+    togglePause,
   } = useSimulation(AIRPORTS, INITIAL_ROUTES);
 
   return (
@@ -78,26 +80,33 @@ const App: React.FC = () => {
       )}
 
       {/* 2. Header & Live Stats */}
-      <header className="flex justify-between items-start mb-8 border-b border-slate-800 pb-6">
+      <header className="flex justify-between items-start mb-2 border-b border-slate-800 pb-2">
         <div>
           <h1 className="text-3xl font-black tracking-tighter text-emerald-400 italic">
-            NAMA <span className="text-slate-500 font-light not-italic">TRACON</span>
+            NAMA <span className="text-slate-500 font-light not-italic"> Terminal Radar Approach Control</span>
           </h1>
-          <p className="text-slate-500 text-xs font-mono uppercase tracking-widest mt-1">
-            Terminal Radar Approach Control
-          </p>
+        
+
+          <div className="flex gap-4">
+            <button
+              onClick={togglePause}
+              className={`px-4 py-2 rounded-lg font-bold text-xs transition-all ${isPaused ? 'bg-emerald-500 text-slate-950' : 'bg-slate-800 text-slate-300'
+                }`}
+            >
+              {isPaused ? '▶ RESUME' : '⏸ PAUSE'}
+            </button>
+            <div className="text-right">
+              <p className="text-[10px] uppercase font-bold text-slate-500 tracking-widest">Efficiency Score</p>
+              <p className="text-3xl font-black text-emerald-400 tabular-nums">{score}</p>
+            </div>
+            <div className="text-right border-l border-slate-800 pl-6">
+              <p className="text-[10px] uppercase font-bold text-slate-500 tracking-widest">Active Squawks</p>
+              <p className="text-3xl font-black text-sky-400 tabular-nums">{planes.length}</p>
+            </div>
+          </div>
         </div>
 
-        <div className="flex gap-6">
-          <div className="text-right">
-            <p className="text-[10px] uppercase font-bold text-slate-500 tracking-widest">Efficiency Score</p>
-            <p className="text-3xl font-black text-emerald-400 tabular-nums">{score}</p>
-          </div>
-          <div className="text-right border-l border-slate-800 pl-6">
-            <p className="text-[10px] uppercase font-bold text-slate-500 tracking-widest">Active Squawks</p>
-            <p className="text-3xl font-black text-sky-400 tabular-nums">{planes.length}</p>
-          </div>
-        </div>
+
       </header>
 
       {/* 3. Main Operational Grid */}
@@ -107,6 +116,15 @@ const App: React.FC = () => {
           <div className="bg-slate-900/40 rounded-2xl border border-slate-800 p-2 shadow-2xl relative">
             <Map airports={AIRPORTS} routes={routes} planes={planes} />
 
+            {isPaused && (
+              <div className="absolute inset-0 z-10 bg-slate-950/40 backdrop-blur-[2px] flex items-center justify-center rounded-2xl pointer-events-none">
+                <div className="bg-slate-900 border border-slate-700 px-6 py-3 rounded-full shadow-2xl">
+                  <span className="text-emerald-400 font-black tracking-widest uppercase animate-pulse">
+                    Operations Suspended
+                  </span>
+                </div>
+              </div>
+            )}
             {/* Manual Override Button */}
             <button
               onClick={() => spawnPlane(`TEST-${Math.floor(Math.random() * 100)}`, "LOS", "KAN")}

@@ -19,6 +19,7 @@ export const useSimulation = (
    const [planes, setPlanes] = useState<Plane[]>([]);
    const [score, setScore] = useState(0);
    const [gameOver, setGameOver] = useState<string | null>(null);
+   const [isPaused, setIsPaused] = useState(false);
 
    const routesRef = useRef(routes);
    const planesRef = useRef(planes);
@@ -68,7 +69,7 @@ export const useSimulation = (
    );
 
    useEffect(() => {
-      if (gameOver) return;
+      if (gameOver || isPaused) return;
 
       const interval = setInterval(() => {
          let start = "";
@@ -80,8 +81,6 @@ export const useSimulation = (
          // Keep generating random pairs until we find a path with a weight >= 1.5
          // The attempts limit prevents an infinite loop if the whole map is blocked
          while (attempts < 50) {
-            console.log("attempts");
-
             attempts++;
             const startIdx = Math.floor(Math.random() * initialAirports.length);
             const endIdx = Math.floor(Math.random() * initialAirports.length);
@@ -143,7 +142,7 @@ export const useSimulation = (
 
       return () => clearInterval(interval);
       // eslint-disable-next-line react-hooks/exhaustive-deps
-   }, [gameOver, initialAirports, spawnPlane]);
+   }, [gameOver, initialAirports, spawnPlane, isPaused]);
 
    // --- 2. THE REROUTER ---
    useEffect(() => {
@@ -195,6 +194,13 @@ export const useSimulation = (
    // --- 3. THE COLLISION & ANIMATION ENGINE ---
    const animate = useCallback(
       (time: number) => {
+         if (isPaused || gameOver) {
+            lastTimeRef.current = 0;
+            // eslint-disable-next-line react-hooks/immutability
+            requestRef.current = requestAnimationFrame(animate);
+            return;
+         }
+
          if (lastTimeRef.current !== 0 && !gameOver) {
             const deltaTime = (time - lastTimeRef.current) / 1000;
             const speed = 0.075;
@@ -205,7 +211,7 @@ export const useSimulation = (
                const moved = prevPlanes.map((p) => {
                   // IF HOLDING: Return the plane as is (no progress update)
                   if (p.isHolding) return p;
-                  let { currentStep, progress,  } = p;
+                  let { currentStep, progress } = p;
                   progress += speed * deltaTime;
                   if (progress >= 1) {
                      progress = 0;
@@ -255,10 +261,10 @@ export const useSimulation = (
             });
          }
          lastTimeRef.current = time;
-         // eslint-disable-next-line react-hooks/immutability
+
          requestRef.current = requestAnimationFrame(animate);
       },
-      [gameOver, initialAirports]
+      [gameOver, initialAirports, isPaused]
    );
 
    useEffect(() => {
@@ -314,5 +320,7 @@ export const useSimulation = (
       spawnPlane,
       clearRestrictions,
       toggleHold,
+      isPaused,
+      togglePause: () => setIsPaused(!isPaused),
    };
 };
