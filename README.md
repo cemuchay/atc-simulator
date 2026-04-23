@@ -39,7 +39,10 @@ The simulator challenges you to manage the Nigerian airspace. As flights spawn a
 
 1. **Clone the repository:**
    ```
-   git clone [https://github.com/your-username/atc-simulator.git](https://github.com/your-username/atc-simulator.git)
+   git clone https://github.com/cemuchay/atc-simulator.git
+   ```
+
+   ```
    cd atc-simulator
     ```
 
