@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import React from 'react';
 import type { Airport, Route, Plane } from '../types';
 
@@ -5,17 +6,19 @@ interface MapProps {
   airports: Airport[];
   routes: Route[];
   planes: Plane[];
+  sectorRisks?: any[];
+  onPlaneClick?: (id: string) => void;
 }
 
-export const Map: React.FC<MapProps> = ({ airports, routes, planes }) => {
+export const Map: React.FC<MapProps> = ({ airports, routes, planes, sectorRisks, onPlaneClick }) => {
   // Helper to find airport coordinates quickly
   const getAirport = (id: string) => airports.find((a) => a.id === id);
 
   return (
-    <div className="relative w-full overflow-hidden bg-slate-950 rounded-xl border border-slate-800 shadow-inner">
+    <div className="relative w-full overflow-hidden rounded-xl flex items-center justify-center p-2 md:p-6">
       <svg
         viewBox="0 0 1200 800"
-        className="w-full h-auto bg-slate-950"
+        className="w-full h-auto drop-shadow-[0_0_20px_rgba(16,185,129,0.15)]"
         preserveAspectRatio="xMidYMid meet"
       >
         {/* 1. Draw Routes (Edges) */}
@@ -23,16 +26,26 @@ export const Map: React.FC<MapProps> = ({ airports, routes, planes }) => {
           {routes.map((route, i) => {
             const start = getAirport(route.from);
             const end = getAirport(route.to);
-            if (!start || !end) return null;
+            const risk = sectorRisks?.find(sr => sr.from === route.from && sr.to === route.to);
+            const isHotspot = risk?.isHotspot;
+            const riskColor = risk ? (risk.riskScore > 60 ? 'stroke-red-500' : risk.riskScore > 30 ? 'stroke-amber-500' : 'stroke-slate-700') : 'stroke-slate-700';
 
             return (
               <g key={`route-${i}`}>
+                {/* Risk Halo */}
+                {isHotspot && !route.isBlocked && (
+                  <line
+                    x1={start.x} y1={start.y}
+                    x2={end.x} y2={end.y}
+                    className="stroke-red-500/20 stroke-[12px] blur-[2px] animate-pulse"
+                  />
+                )}
                 <line
                   x1={start.x} y1={start.y}
                   x2={end.x} y2={end.y}
                   className={`transition-all duration-500 ${route.isBlocked
                     ? "stroke-red-600/40 stroke-[3px] stroke-dash-2"
-                    : "stroke-slate-700 stroke-[1.5px]"
+                    : `${riskColor} stroke-[1.5px]`
                     }`}
                   style={{
                     // Dynamic width based on congestion in Tailwind 4.2
@@ -93,30 +106,35 @@ export const Map: React.FC<MapProps> = ({ airports, routes, planes }) => {
             const angle = Math.atan2(toNode.y - fromNode.y, toNode.x - fromNode.x) * (180 / Math.PI);
 
             return (
-              <g key={plane.id} transform={`translate(${planeX}, ${planeY})`}>
+              <g 
+                key={plane.id} 
+                transform={`translate(${planeX}, ${planeY})`}
+                className="cursor-pointer hover:drop-shadow-[0_0_15px_rgba(251,191,36,0.8)] transition-all"
+                onClick={() => onPlaneClick?.(plane.id)}
+              >
                 {/* Plane Body */}
                 <g transform={`rotate(${angle})`}>
                   <path
                     d="M-6,-6 L8,0 L-6,6 L-3,0 Z"
-                    className="fill-amber-400 shadow-lg"
+                    className={`shadow-lg transition-colors duration-300 ${plane.isColliding ? 'fill-red-500 animate-ping' : 'fill-amber-400'}`}
                   />
                 </g>
                 {/* Flight Tag */}
                 <text
                   x={10}
                   y={-10}
-                  className="fill-amber-400 text-[12px] font-mono font-black"
+                  className={`${plane.isColliding ? 'fill-red-500' : 'fill-amber-400'} text-[12px] font-mono font-black transition-colors duration-300`}
                 >
                   {plane.id}
                 </text>
                 {/* Proximity Halo (Radar Effect) */}
                 <circle
                   r={12}
-                  className="fill-amber-400/20 animate-ping"
+                  className={`${plane.isColliding ? 'fill-red-500/50 animate-pulse' : 'fill-amber-400/20 animate-ping'}`}
                 />
                 {/* If holding, move the plane body slightly off-center to create a "circle" effect */}
                 <g transform={plane.isHolding ? "translate(10, 0) rotate(90)" : `rotate(${angle})`}>
-                  <path d="M-6,-6 L8,0 L-6,6 L-3,0 Z" className="fill-amber-400" />
+                  <path d="M-6,-6 L8,0 L-6,6 L-3,0 Z" className={plane.isColliding ? 'fill-red-500' : 'fill-amber-400'} />
                 </g>
               </g>
 
@@ -133,6 +151,9 @@ export const Map: React.FC<MapProps> = ({ airports, routes, planes }) => {
         </div>
         <div className="flex items-center gap-2">
           <span className="w-2 h-2 rounded-full bg-amber-400" /> Active Flight
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse" /> Risk Hotspot
         </div>
         <div className="flex items-center gap-2">
           <span className="w-2 h-2 bg-red-600" /> Blocked Path

@@ -1,5 +1,6 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState, useEffect, useRef, useCallback } from "react";
-import type { Airport, Route, Plane } from "../types";
+import type { Airport, Route, Plane, SimulationEvent, EventType } from "../types";
 import { findShortestPath } from "../lib/dijkstra";
 
 const AIRLINES = [
@@ -9,7 +10,8 @@ const AIRLINES = [
    "Arik Air",
    "Dana Air",
 ];
-const COLLISION_DISTANCE = 15;
+const COLLISION_DISTANCE = 8;
+const WARNING_DISTANCE = 25;
 
 export const useSimulation = (
    initialAirports: Airport[],
@@ -19,7 +21,27 @@ export const useSimulation = (
    const [planes, setPlanes] = useState<Plane[]>([]);
    const [score, setScore] = useState(0);
    const [gameOver, setGameOver] = useState<string | null>(null);
+   const hasCrashed = useRef(false);
    const [isPaused, setIsPaused] = useState(false);
+   const [events, setEvents] = useState<SimulationEvent[]>(() => [{
+      id: Math.random().toString(36).substring(2, 9),
+      timestamp: Date.now(),
+      type: 'SYSTEM_START',
+      message: 'System initialized. Radar online.',
+   }]);
+
+   const addEvent = useCallback((type: EventType, message: string, metadata?: any) => {
+      setEvents((prev) => [
+         {
+            id: Math.random().toString(36).substring(2, 9),
+            timestamp: Date.now(),
+            type,
+            message,
+            metadata,
+         },
+         ...prev,
+      ].slice(0, 100)); // Keep last 100 events
+   }, []);
 
    const routesRef = useRef(routes);
    const planesRef = useRef(planes);
@@ -40,16 +62,22 @@ export const useSimulation = (
                r.from === from && r.to === to ? { ...r, congestion: level } : r
             )
          );
+         addEvent('CONGESTION_CHANGED', `Sector ${from}-${to} congestion changed to ${level}x`, { from, to, level });
       },
-      []
+      [addEvent]
    );
 
    const resetGame = useCallback(() => {
       setPlanes([]);
       setScore(0);
       setGameOver(null);
+      hasCrashed.current = false;
+      setEvents([]);
       lastTimeRef.current = 0;
-   }, []);
+      addEvent('SYSTEM_START', 'System restarted and operations resumed.');
+   }, [addEvent]);
+
+
 
    // --- 1. THE SPAWNER ---
    const spawnPlane = useCallback(
@@ -64,8 +92,9 @@ export const useSimulation = (
 
          const newPlane: Plane = { id, path, currentStep: 0, progress: 0 };
          setPlanes((prev) => [...prev, newPlane]);
+         addEvent('PLANE_SPAWNED', `Flight ${id} spawned at ${start} bound for ${end}`, { id, start, end, path });
       },
-      [initialAirports]
+      [initialAirports, addEvent]
    );
 
    useEffect(() => {
@@ -132,9 +161,8 @@ export const useSimulation = (
 
          // Only spawn if we successfully found a long enough route
          if (validRouteFound && !airportBusy) {
-            const id = `${
-               AIRLINES[Math.floor(Math.random() * AIRLINES.length)]
-            } ${Math.floor(100 + Math.random() * 900)}`;
+            const id = `${AIRLINES[Math.floor(Math.random() * AIRLINES.length)]
+               } ${Math.floor(100 + Math.random() * 900)}`;
 
             spawnPlane(id, start, end);
          }
@@ -159,15 +187,28 @@ export const useSimulation = (
                routes
             );
 
-            return newPath.length > 0
-               ? {
-                    ...plane,
-                    path: [...plane.path.slice(0, nextIdx), ...newPath],
-                 }
-               : plane;
+            if (newPath.length > 0) {
+               // Only log if the path actually changed significantly
+               const oldPathStr = plane.path.join('-');
+               const newPathArr = [...plane.path.slice(0, nextIdx), ...newPath];
+               const newPathStr = newPathArr.join('-');
+
+               if (oldPathStr !== newPathStr) {
+                  addEvent('REROUTE_EXECUTED', `Flight ${plane.id} rerouted dynamically.`, {
+                     id: plane.id,
+                     oldPath: plane.path,
+                     newPath: newPathArr
+                  });
+               }
+               return {
+                  ...plane,
+                  path: newPathArr,
+               };
+            }
+            return plane;
          })
       );
-   }, [routes, initialAirports]);
+   }, [routes, initialAirports, addEvent]);
 
    const toggleHold = useCallback((planeId: string) => {
       setPlanes((prev) => {
@@ -182,14 +223,20 @@ export const useSimulation = (
                      p.id === planeId ? { ...p, isHolding: false } : p
                   )
                );
+               addEvent('HOLD_DISABLED', `Hold released for ${planeId} automatically.`, { id: planeId });
             }, 3500);
+         }
+
+         const willHold = isActivatingHold || (targetPlane && !targetPlane.isHolding);
+         if (targetPlane) {
+            addEvent(willHold ? 'HOLD_ENABLED' : 'HOLD_DISABLED', `Hold ${willHold ? 'initiated' : 'released'} for ${planeId}.`, { id: planeId });
          }
 
          return prev.map((p) =>
             p.id === planeId ? { ...p, isHolding: !p.isHolding } : p
          );
       });
-   }, []);
+   }, [addEvent]);
 
    // --- 3. THE COLLISION & ANIMATION ENGINE ---
    const animate = useCallback(
@@ -220,9 +267,10 @@ export const useSimulation = (
                   return { ...p, currentStep, progress };
                });
 
-               const active = moved.filter((p) => {
+               const active = moved.map(p => ({ ...p, isColliding: false })).filter((p) => {
                   if (p.currentStep >= p.path.length - 1) {
                      setScore((s) => s + 100);
+                     addEvent('PLANE_LANDED', `Flight ${p.id} landed successfully at ${p.path[p.path.length - 1]}.`, { id: p.id, destination: p.path[p.path.length - 1] });
                      return false;
                   }
                   return true;
@@ -250,10 +298,21 @@ export const useSimulation = (
                      );
 
                      if (d < COLLISION_DISTANCE) {
-                        setGameOver(
-                           `COLLISION: ${active[i].id} & ${active[j].id}`
-                        );
-                        return [];
+                        if (!hasCrashed.current) {
+                           hasCrashed.current = true;
+                           setGameOver(`COLLISION: ${active[i].id} & ${active[j].id}`);
+                           addEvent('COLLISION_DETECTED', `CRITICAL: Collision detected between ${active[i].id} and ${active[j].id}`, {
+                              plane1: active[i].id,
+                              plane1Sector: `${active[i].path[active[i].currentStep]} -> ${active[i].path[active[i].currentStep + 1]}`,
+                              plane2: active[j].id,
+                              plane2Sector: `${active[j].path[active[j].currentStep]} -> ${active[j].path[active[j].currentStep + 1]}`,
+                              coordinates: { x: Math.round(posA.x), y: Math.round(posA.y) }
+                           });
+                        }
+                        return active; // Return active instead of [] so we can still see them frozen on map
+                     } else if (d < WARNING_DISTANCE) {
+                        active[i].isColliding = true;
+                        active[j].isColliding = true;
                      }
                   }
                }
@@ -264,7 +323,7 @@ export const useSimulation = (
 
          requestRef.current = requestAnimationFrame(animate);
       },
-      [gameOver, initialAirports, isPaused]
+      [gameOver, initialAirports, isPaused, addEvent]
    );
 
    useEffect(() => {
@@ -277,7 +336,8 @@ export const useSimulation = (
       setRoutes((prev) =>
          prev.map((r) => ({ ...r, isBlocked: false, congestion: 1 }))
       );
-   }, []);
+      addEvent('SECTOR_OPENED', 'All restrictions cleared. Sectors reset.', {});
+   }, [addEvent]);
 
    // --- UPGRADED: Timed Sector Closures ---
    const toggleRoute = useCallback(
@@ -286,7 +346,6 @@ export const useSimulation = (
             const route = prev.find((r) => r.from === from && r.to === to);
             const isClosing = route && !route.isBlocked;
 
-            // If we are closing it AND a timer was provided, set a timeout to reopen
             if (isClosing && autoOpenSeconds) {
                setTimeout(() => {
                   setRoutes((currentRoutes) =>
@@ -296,8 +355,11 @@ export const useSimulation = (
                            : r
                      )
                   );
+                  addEvent('SECTOR_OPENED', `Sector ${from}-${to} auto-reopened.`, { from, to });
                }, autoOpenSeconds * 1000);
             }
+
+            addEvent(isClosing ? 'SECTOR_CLOSED' : 'SECTOR_OPENED', `Sector ${from}-${to} ${isClosing ? 'closed' : 'opened'}.`, { from, to });
 
             return prev.map((r) =>
                r.from === from && r.to === to
@@ -306,12 +368,13 @@ export const useSimulation = (
             );
          });
       },
-      []
+      [addEvent]
    );
 
    return {
       planes,
       routes,
+      events,
       score,
       gameOver,
       resetGame,
