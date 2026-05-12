@@ -27,6 +27,9 @@ export const Map: React.FC<MapProps> = ({ airports, routes, planes, sectorRisks,
           {routes.map((route, i) => {
             const start = getAirport(route.from);
             const end = getAirport(route.to);
+            
+            if (!start || !end) return null;
+
             const risk = sectorRisks?.find(sr => sr.from === route.from && sr.to === route.to);
             const isHotspot = risk?.isHotspot;
             const riskColor = risk ? (risk.riskScore > 60 ? 'stroke-red-500' : risk.riskScore > 30 ? 'stroke-amber-500' : 'stroke-slate-700') : 'stroke-slate-700';
@@ -36,14 +39,14 @@ export const Map: React.FC<MapProps> = ({ airports, routes, planes, sectorRisks,
                 {/* Risk Halo */}
                 {isHotspot && !route.isBlocked && (
                   <line
-                    x1={start.x} y1={start.y}
-                    x2={end.x} y2={end.y}
+                    x1={start?.x} y1={start?.y}
+                    x2={end?.x} y2={end?.y}
                     className="stroke-red-500/20 stroke-[12px] blur-[2px] animate-pulse"
                   />
                 )}
                 <line
-                  x1={start.x} y1={start.y}
-                  x2={end.x} y2={end.y}
+                  x1={start?.x} y1={start?.y}
+                  x2={end?.x} y2={end?.y}
                   className={`transition-all duration-500 ${route.isBlocked
                     ? "stroke-red-600/40 stroke-[3px] stroke-dash-2"
                     : `${riskColor} stroke-[1.5px]`
