@@ -4,41 +4,56 @@ import { AIAssistantPanel } from './components/AIAssistantPanel';
 import { useSimulation } from './hooks/useSimulation';
 import { useRiskAnalysis } from './hooks/useRiskAnalysis';
 import { useAIIncidentExplainer } from './hooks/useAIIncidentExplainer';
+import { useAutonomousAgent } from './hooks/useAutonomousAgent';
 import type { Airport, Route } from './types';
 
 const AIRPORTS: Airport[] = [
-  { id: 'LOS', x: 100, y: 650 }, // Lagos (South West) 1
-  { id: 'ABV', x: 550, y: 400 }, // Abuja (Central) 2
-  { id: 'PHC', x: 600, y: 750 }, // Port Harcourt (South South) 2
-  { id: 'KAN', x: 650, y: 100 }, // Kano (North) 4
-  { id: 'ENU', x: 620, y: 600 }, // Enugu (South East) 5
-  { id: 'QRW', x: 350, y: 450 }, // Ilorin 6
-  { id: 'QOW', x: 630, y: 680 }, // Owerri 7
-  { id: 'QUO', x: 750, y: 750 }, // Uyo 8
-  // { id: 'ABB', x: 530, y: 630 }, // Asaba
-  { id: 'DKA', x: 550, y: 50 },  // Katsina 9
-  { id: 'JOS', x: 750, y: 350 }, // Jos 10
+  { id: 'LOS', x: 100, y: 650 }, // Lagos (South West Hub)
+  { id: 'ABV', x: 500, y: 400 }, // Abuja (Central Hub)
+  { id: 'PHC', x: 480, y: 780 }, // Port Harcourt (South South)
+  { id: 'KAN', x: 600, y: 150 }, // Kano (North Hub)
+  { id: 'ENU', x: 550, y: 620 }, // Enugu (South East)
+  { id: 'QRW', x: 250, y: 450 }, // Ilorin (Mid-West)
+  { id: 'QOW', x: 500, y: 700 }, // Owerri (South East)
+  { id: 'QUO', x: 580, y: 760 }, // Uyo (South South)
+  { id: 'ABB', x: 450, y: 620 }, // Asaba (South South)
+  { id: 'DKA', x: 500, y: 50 },  // Katsina (Far North)
+  { id: 'JOS', x: 680, y: 350 }, // Jos (North Central)
 ];
 
 const INITIAL_ROUTES: Route[] = [
-  // Core Trunk Routes
-  { from: 'LOS', to: 'ABV', weight: 2, isBlocked: false, congestion: 1 },
-  { from: 'ABV', to: 'KAN', weight: 2, isBlocked: false, congestion: 1 },
-  { from: 'LOS', to: 'PHC', weight: 2, isBlocked: false, congestion: 1 },
-  { from: 'PHC', to: 'ABV', weight: 2, isBlocked: false, congestion: 1 },
-  { from: 'ENU', to: 'ABV', weight: 1.5, isBlocked: false, congestion: 1 },
-  { from: 'LOS', to: 'QRW', weight: 1, isBlocked: false, congestion: 3 },
-  { from: 'QRW', to: 'ABV', weight: 1, isBlocked: false, congestion: 3 },
+  // Primary Trunk Routes (connecting Hubs)
+  { from: 'LOS', to: 'ABV', weight: 4.7, isBlocked: false, congestion: 1 },
+  { from: 'LOS', to: 'PHC', weight: 4.0, isBlocked: false, congestion: 1 },
+  { from: 'LOS', to: 'KAN', weight: 7.1, isBlocked: false, congestion: 1 },
+  { from: 'ABV', to: 'KAN', weight: 2.7, isBlocked: false, congestion: 1 },
+  { from: 'ABV', to: 'PHC', weight: 3.8, isBlocked: false, congestion: 1 },
 
-  // New South/East Corridors
-  { from: 'QUO', to: 'ABV', weight: 2.5, isBlocked: false, congestion: 3 },
-  { from: 'QUO', to: 'LOS', weight: 2.5, isBlocked: false, congestion: 3 },
+  // South-West & Mid-West
+  { from: 'LOS', to: 'QRW', weight: 2.5, isBlocked: false, congestion: 1 },
+  { from: 'ABV', to: 'QRW', weight: 2.5, isBlocked: false, congestion: 1 },
+  { from: 'LOS', to: 'ABB', weight: 3.5, isBlocked: false, congestion: 1 },
+  { from: 'ABV', to: 'ABB', weight: 2.3, isBlocked: false, congestion: 1 },
 
-  // New North Corridors
-  { from: 'ABV', to: 'JOS', weight: 1, isBlocked: false, congestion: 3 },
-  { from: 'JOS', to: 'KAN', weight: 1.5, isBlocked: false, congestion: 3 },
-  { from: 'KAN', to: 'DKA', weight: 1, isBlocked: false, congestion: 3 },
-  { from: 'DKA', to: 'ABV', weight: 2, isBlocked: false, congestion: 3 },
+  // South-East & South-South Corridors
+  { from: 'LOS', to: 'ENU', weight: 4.5, isBlocked: false, congestion: 1 },
+  { from: 'ABV', to: 'ENU', weight: 2.3, isBlocked: false, congestion: 1 },
+  { from: 'LOS', to: 'QOW', weight: 4.0, isBlocked: false, congestion: 1 },
+  { from: 'ABV', to: 'QOW', weight: 3.0, isBlocked: false, congestion: 1 },
+  { from: 'LOS', to: 'QUO', weight: 4.9, isBlocked: false, congestion: 1 },
+  { from: 'ABV', to: 'QUO', weight: 3.7, isBlocked: false, congestion: 1 },
+  
+  // Dense Southern Network (Regional)
+  { from: 'PHC', to: 'QUO', weight: 1.0, isBlocked: false, congestion: 1 },
+  { from: 'ENU', to: 'PHC', weight: 1.7, isBlocked: false, congestion: 1 },
+  { from: 'ENU', to: 'QOW', weight: 0.9, isBlocked: false, congestion: 1 },
+  { from: 'PHC', to: 'QOW', weight: 0.8, isBlocked: false, congestion: 1 },
+  { from: 'ABB', to: 'ENU', weight: 1.0, isBlocked: false, congestion: 1 },
+
+  // Northern & Central Corridors
+  { from: 'ABV', to: 'JOS', weight: 1.9, isBlocked: false, congestion: 1 },
+  { from: 'KAN', to: 'JOS', weight: 2.2, isBlocked: false, congestion: 1 },
+  { from: 'KAN', to: 'DKA', weight: 1.4, isBlocked: false, congestion: 1 },
 ];
 
 const App: React.FC = () => {
@@ -56,10 +71,16 @@ const App: React.FC = () => {
     toggleHold,
     isPaused,
     togglePause,
+    addEvent,
   } = useSimulation(AIRPORTS, INITIAL_ROUTES);
 
   const { sectorRisks, averageSystemRisk } = useRiskAnalysis(planes, routes);
   const { explanations, isAnalyzing } = useAIIncidentExplainer(events);
+
+  const [isAutoPilotEnabled, setIsAutoPilotEnabled] = React.useState(false);
+  const { agentLogs, isAgentThinking } = useAutonomousAgent(
+    isAutoPilotEnabled, planes, routes, averageSystemRisk, sectorRisks, toggleHold, toggleRoute, addEvent
+  );
 
   const [routeAnalysis, setRouteAnalysis] = React.useState<Record<string, { loading: boolean, text?: string }>>({});
 
@@ -75,10 +96,10 @@ const App: React.FC = () => {
 
     const { callAI } = await import('./lib/aiClient');
     const res = await callAI('/api/analyze', prompt, sys);
-    setRouteAnalysis(prev => ({ ...prev, [key]: { loading: false, text: res?.text || "Analysis failed." } }));
+    setRouteAnalysis(prev => ({ ...prev, [key]: { loading: false, text: res?.error ? `API Error: ${res.error}` : (res?.text || "Analysis failed.") } }));
   };
 
-  const [activeTab, setActiveTab] = React.useState<'ops' | 'intel'>('ops');
+  const [activeTab, setActiveTab] = React.useState<'ops' | 'intel'>('intel');
 
   return (
     <div className="relative min-h-screen bg-[radial-gradient(ellipse_at_top,var(--tw-gradient-stops))] from-slate-900 via-slate-950 to-black text-slate-100 p-3 md:p-6 font-sans overflow-x-hidden">
@@ -108,6 +129,17 @@ const App: React.FC = () => {
         </div>
 
         <div className="flex flex-wrap gap-3 md:gap-6 items-center w-full md:w-auto justify-between md:justify-end bg-slate-900/40 backdrop-blur-md p-3 md:p-4 rounded-2xl border border-white/5">
+          <button
+            onClick={() => setIsAutoPilotEnabled(!isAutoPilotEnabled)}
+            className={`px-4 py-2 rounded-xl font-bold text-xs transition-all shadow-lg flex items-center gap-2 ${isAutoPilotEnabled ? 'bg-indigo-600 text-white shadow-[0_0_15px_rgba(79,70,229,0.5)] border border-indigo-400' : 'bg-slate-800 text-slate-400 hover:bg-slate-700 hover:text-slate-200 border border-transparent'}`}
+          >
+            {isAutoPilotEnabled ? (
+              <><span className="w-2 h-2 bg-white rounded-full animate-pulse" /> AUTO-PILOT ON</>
+            ) : (
+              'AUTO-PILOT OFF'
+            )}
+          </button>
+
           {!gameOver && (
             <button
               onClick={togglePause}
@@ -164,6 +196,27 @@ const App: React.FC = () => {
                 + Dispatch
               </button>
             )}
+
+            {/* Agentic Action Log Overlay */}
+            {isAutoPilotEnabled && (
+              <div className="absolute bottom-6 right-6 w-72 max-h-48 overflow-hidden pointer-events-none z-30 flex flex-col justify-end items-end gap-2">
+                {isAgentThinking && (
+                  <div className="bg-indigo-950/80 backdrop-blur-md border border-indigo-500/50 p-2 rounded-lg flex items-center gap-2 animate-pulse shadow-[0_0_15px_rgba(79,70,229,0.3)]">
+                    <span className="w-1.5 h-1.5 rounded-full bg-indigo-400 animate-ping" />
+                    <span className="text-[10px] font-mono text-indigo-200 uppercase font-bold tracking-wider">AI Evaluating Interventions...</span>
+                  </div>
+                )}
+                {agentLogs.slice(0, 3).map(log => (
+                  <div key={log.id} className="bg-slate-900/90 backdrop-blur-md border-r-4 border-indigo-500 p-3 rounded-lg shadow-xl animate-in fade-in slide-in-from-right-5 text-right w-full">
+                    <div className="flex justify-between items-center mb-1">
+                      <span className="text-[8px] text-slate-500 font-mono">{new Date(log.timestamp).toLocaleTimeString()}</span>
+                      <span className="text-[10px] font-black text-indigo-400 uppercase tracking-widest">{log.action}</span>
+                    </div>
+                    <p className="text-[10px] text-slate-300 font-mono leading-tight">{log.reason}</p>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* AI Assistant spanning the bottom of the map */}
@@ -174,17 +227,18 @@ const App: React.FC = () => {
         <div className="flex flex-col gap-4 h-[80vh] lg:h-[calc(100vh-100px)]">
           {/* Tab Navigation */}
           <div className="flex gap-2 p-1.5 bg-slate-900/40 backdrop-blur-xl rounded-2xl border border-white/10 shadow-lg shrink-0">
-            <button
-              onClick={() => setActiveTab('ops')}
-              className={`flex-1 py-2.5 rounded-xl text-[10px] font-bold uppercase tracking-[0.2em] transition-all duration-300 ${activeTab === 'ops' ? 'bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 shadow-[0_0_15px_rgba(99,102,241,0.2)]' : 'text-slate-500 hover:text-slate-300 hover:bg-white/5 border border-transparent'}`}
-            >
-              Operations
-            </button>
+
             <button
               onClick={() => setActiveTab('intel')}
               className={`flex-1 py-2.5 rounded-xl text-[10px] font-bold uppercase tracking-[0.2em] transition-all duration-300 ${activeTab === 'intel' ? 'bg-sky-500/20 text-sky-300 border border-sky-500/30 shadow-[0_0_15px_rgba(14,165,233,0.2)]' : 'text-slate-500 hover:text-slate-300 hover:bg-white/5 border border-transparent'}`}
             >
               Intelligence
+            </button>
+            <button
+              onClick={() => setActiveTab('ops')}
+              className={`flex-1 py-2.5 rounded-xl text-[10px] font-bold uppercase tracking-[0.2em] transition-all duration-300 ${activeTab === 'ops' ? 'bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 shadow-[0_0_15px_rgba(99,102,241,0.2)]' : 'text-slate-500 hover:text-slate-300 hover:bg-white/5 border border-transparent'}`}
+            >
+              Operations
             </button>
           </div>
 
@@ -345,16 +399,20 @@ const App: React.FC = () => {
                       <span className="text-[10px] text-slate-500 italic block text-center mt-8">No events logged.</span>
                     ) : (
                       events.map(ev => (
-                        <div key={ev.id} className="text-[10px] font-mono flex items-start gap-3 py-2 border-b border-white/5 last:border-0 hover:bg-white/5 rounded-lg px-2 transition-colors">
-                          <span className="text-slate-500 shrink-0 select-none">[{new Date(ev.timestamp).toLocaleTimeString()}]</span>
-                          <span className={`font-bold shrink-0 ${ev.type.includes('COLLISION') ? 'text-red-400' :
-                            ev.type.includes('REROUTE') ? 'text-amber-400' :
-                              ev.type.includes('SECTOR') ? 'text-orange-400' :
-                                'text-emerald-400'
-                            }`}>
-                            {ev.type}
-                          </span>
-                          <span className="text-slate-300">{ev.message}</span>
+                        <div key={ev.id} className="text-[9px] font-mono flex flex-col xl:flex-row items-start xl:items-baseline gap-1 xl:gap-3 py-2 border-b border-white/5 last:border-0 hover:bg-white/5 rounded-lg px-2 transition-colors">
+                          <div className="flex gap-2 items-baseline shrink-0">
+                            <span className="text-slate-500 select-none">[{new Date(ev.timestamp).toLocaleTimeString()}]</span>
+                            <span className={`font-bold ${ev.type.includes('COLLISION') ? 'text-red-400' :
+                              ev.type.includes('REROUTE') ? 'text-amber-400' :
+                                ev.type.includes('SECTOR') ? 'text-orange-400' :
+                                  ev.type.includes('EXPERT') ? 'text-fuchsia-400' :
+                                    ev.type.includes('AI') ? 'text-indigo-400' :
+                                      'text-emerald-400'
+                              }`}>
+                              {ev.type}
+                            </span>
+                          </div>
+                          <span className="text-slate-300 wrap-break-word min-w-0 flex-1 leading-relaxed">{ev.message}</span>
                         </div>
                       ))
                     )}

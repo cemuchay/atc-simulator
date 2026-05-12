@@ -385,5 +385,6 @@ export const useSimulation = (
       toggleHold,
       isPaused,
       togglePause: () => setIsPaused(!isPaused),
+      addEvent,
    };
 };

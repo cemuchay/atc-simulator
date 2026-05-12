@@ -55,7 +55,11 @@ Be concise, professional, and use ATC terminology. Do not hallucinate data. If y
 
         const res = await callAI('/api/chat', fullPrompt, systemInstruction);
 
-        setMessages(prev => [...prev, { role: 'ai', text: res?.text || "Communication error with AI core." }]);
+        if (res?.error) {
+            setMessages(prev => [...prev, { role: 'ai', text: `API Error: ${res.error}` }]);
+        } else {
+            setMessages(prev => [...prev, { role: 'ai', text: res?.text || "Communication error with AI core." }]);
+        }
         setIsLoading(false);
     }
 

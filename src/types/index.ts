@@ -31,7 +31,9 @@ export type EventType =
   | 'CONGESTION_CHANGED'
   | 'COLLISION_DETECTED'
   | 'HOLD_ENABLED'
-  | 'HOLD_DISABLED';
+  | 'HOLD_DISABLED'
+  | 'EXPERT_SYSTEM'
+  | 'AI_STRATEGY';
 
 export interface SimulationEvent {
   id: string;
