@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
+
 import React from 'react';
 import type { Airport, Route, Plane } from '../types';
 
@@ -6,6 +6,7 @@ interface MapProps {
   airports: Airport[];
   routes: Route[];
   planes: Plane[];
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   sectorRisks?: any[];
   onPlaneClick?: (id: string) => void;
 }
@@ -18,7 +19,7 @@ export const Map: React.FC<MapProps> = ({ airports, routes, planes, sectorRisks,
     <div className="relative w-full overflow-hidden rounded-xl flex items-center justify-center p-2 md:p-6">
       <svg
         viewBox="0 0 1200 800"
-        className="w-full h-auto drop-shadow-[0_0_20px_rgba(16,185,129,0.15)]"
+        className="w-full h-auto"
         preserveAspectRatio="xMidYMid meet"
       >
         {/* 1. Draw Routes (Edges) */}
@@ -106,36 +107,33 @@ export const Map: React.FC<MapProps> = ({ airports, routes, planes, sectorRisks,
             const angle = Math.atan2(toNode.y - fromNode.y, toNode.x - fromNode.x) * (180 / Math.PI);
 
             return (
-              <g 
-                key={plane.id} 
+              <g
+                key={plane.id}
                 transform={`translate(${planeX}, ${planeY})`}
-                className="cursor-pointer hover:drop-shadow-[0_0_15px_rgba(251,191,36,0.8)] transition-all"
+                className="cursor-pointer transition-colors hover:opacity-80"
                 onClick={() => onPlaneClick?.(plane.id)}
+                style={{ willChange: 'transform' }}
               >
                 {/* Plane Body */}
-                <g transform={`rotate(${angle})`}>
+                <g transform={plane.isHolding ? `scale(1.5)` : `rotate(${angle})`}>
                   <path
                     d="M-6,-6 L8,0 L-6,6 L-3,0 Z"
-                    className={`shadow-lg transition-colors duration-300 ${plane.isColliding ? 'fill-red-500 animate-ping' : 'fill-amber-400'}`}
+                    className={`transition-colors duration-300 ${plane.isColliding ? 'fill-red-500 animate-ping' : plane.isHolding ? 'fill-amber-500' : 'fill-amber-400'}`}
                   />
                 </g>
                 {/* Flight Tag */}
                 <text
-                  x={10}
-                  y={-10}
+                  x={12}
+                  y={-12}
                   className={`${plane.isColliding ? 'fill-red-500' : 'fill-amber-400'} text-[12px] font-mono font-black transition-colors duration-300`}
                 >
                   {plane.id}
                 </text>
                 {/* Proximity Halo (Radar Effect) */}
                 <circle
-                  r={12}
-                  className={`${plane.isColliding ? 'fill-red-500/50 animate-pulse' : 'fill-amber-400/20 animate-ping'}`}
+                  r={plane.isHolding ? 16 : 12}
+                  className={`${plane.isColliding ? 'fill-red-500/50 animate-pulse' : plane.isHolding ? 'fill-amber-500/40' : 'fill-amber-400/20 animate-ping'} transition-all duration-300`}
                 />
-                {/* If holding, move the plane body slightly off-center to create a "circle" effect */}
-                <g transform={plane.isHolding ? "translate(10, 0) rotate(90)" : `rotate(${angle})`}>
-                  <path d="M-6,-6 L8,0 L-6,6 L-3,0 Z" className={plane.isColliding ? 'fill-red-500' : 'fill-amber-400'} />
-                </g>
               </g>
 
 

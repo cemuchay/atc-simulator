@@ -159,7 +159,7 @@ const App: React.FC = () => {
             {!gameOver && (
               <button
                 onClick={() => spawnPlane(`TEST-${Math.floor(Math.random() * 100)}`, "LOS", "KAN")}
-                className="absolute top-6 right-6 px-4 py-2 bg-slate-900/80 hover:bg-slate-800 border border-white/10 rounded-xl text-xs font-bold text-slate-300 backdrop-blur-md shadow-lg transition-all hover:scale-105 active:scale-95"
+                className="absolute top-6 right-6 px-4 py-2 bg-slate-900/80 hover:bg-slate-800 border border-white/10 rounded-xl text-xs font-bold text-slate-300 backdrop-blur-md shadow-lg transition-all hover:scale-105 active:scale-95 z-20"
               >
                 + Dispatch
               </button>
@@ -171,7 +171,7 @@ const App: React.FC = () => {
         </div>
 
         {/* Right Sidebar - Tabbed Container */}
-        <div className="flex flex-col gap-4 h-auto lg:h-[calc(100vh-160px)]">
+        <div className="flex flex-col gap-4 h-[80vh] lg:h-[calc(100vh-100px)]">
           {/* Tab Navigation */}
           <div className="flex gap-2 p-1.5 bg-slate-900/40 backdrop-blur-xl rounded-2xl border border-white/10 shadow-lg shrink-0">
             <button
@@ -207,16 +207,15 @@ const App: React.FC = () => {
                         <button
                           key={`hold-${p.id}`}
                           onClick={() => toggleHold(p.id)}
-                          disabled={p.isHolding}
                           className={`px-3 py-2 rounded-xl text-[9px] font-black transition-all flex items-center gap-2 border shadow-lg hover:scale-105 active:scale-95 ${p.isHolding
-                            ? 'bg-amber-500/20 border-amber-500/50 text-amber-400 cursor-wait shadow-[0_0_15px_rgba(245,158,11,0.2)]'
+                            ? 'bg-amber-500/80 border-amber-500 text-slate-900 shadow-[0_0_15px_rgba(245,158,11,0.5)]'
                             : 'bg-slate-800/80 border-white/10 text-slate-300 hover:border-amber-500/50 hover:bg-slate-700/80 backdrop-blur-sm'
                             }`}
                         >
                           {p.id}
 
-                          <span className={p.isHolding ? 'animate-spin' : ''}>
-                            {p.isHolding ? '⏳' : '🛑'}
+                          <span>
+                            {p.isHolding ? '▶️' : '🛑'}
                           </span>
                         </button>
                       ))
@@ -226,13 +225,13 @@ const App: React.FC = () => {
 
                 {/* 2. ADVANCED OPERATIONS BAY (Full Data) */}
                 <section className="bg-slate-900/30 backdrop-blur-xl rounded-3xl border border-white/10 p-4 overflow-y-auto custom-scrollbar flex-1 shadow-2xl relative">
-                  <div className="flex justify-between items-center mb-5 sticky top-0 bg-slate-950/80 py-2 px-1 backdrop-blur-md z-10 rounded-lg -mt-2">
-                    <h2 className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400">
+                  <div className="flex flex-col 2xl:flex-row justify-between items-start 2xl:items-center mb-5 sticky top-0 bg-slate-950/80 py-2 px-2 backdrop-blur-md z-10 rounded-lg -mt-2 gap-2">
+                    <h2 className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400 whitespace-nowrap">
                       Flight Management
                     </h2>
                     <button
                       onClick={clearRestrictions}
-                      className="text-[9px] font-bold uppercase text-emerald-500 hover:text-emerald-400"
+                      className="text-[9px] font-bold uppercase text-emerald-500 hover:text-emerald-400 whitespace-nowrap shrink-0 bg-emerald-500/10 px-2 py-1 rounded"
                     >
                       Reset All Sectors
                     </button>
@@ -244,18 +243,18 @@ const App: React.FC = () => {
                       const activeRoute = routes.find(r => r.from === p.path[p.currentStep] && r.to === currentTo);
 
                       return (
-                        <div key={p.id} className="bg-slate-800/40 backdrop-blur-sm p-4 rounded-2xl border border-white/5 hover:border-white/10 transition-colors shadow-lg group">
+                        <div key={p.id} className="bg-slate-800/40 backdrop-blur-sm p-2.5 rounded-xl border border-white/5 hover:border-white/10 transition-colors shadow-lg group">
                           {/* Minimal Header */}
-                          <div className="flex justify-between items-center mb-3">
-                            <span className="text-sm font-black text-white drop-shadow-md">{p.id}</span>
-                            <span className="text-[10px] font-mono font-bold text-emerald-400 bg-emerald-500/10 px-2 py-1 rounded-md border border-emerald-500/20">
+                          <div className="flex justify-between items-center mb-2">
+                            <span className="text-xs font-black text-white drop-shadow-md">{p.id}</span>
+                            <span className="text-[9px] font-mono font-bold text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded border border-emerald-500/20">
                               {Math.round(p.progress * 100)}% ➔ {currentTo}
                             </span>
                           </div>
 
                           {/* Compact Path (Just current and next) */}
-                          <div className="flex items-center gap-2 text-[10px] font-mono text-slate-400 mb-4 bg-black/20 p-2 rounded-lg">
-                            <span className="text-slate-500 font-sans font-bold text-[8px] uppercase tracking-widest">POS</span>
+                          <div className="flex items-center gap-1.5 text-[9px] font-mono text-slate-400 mb-2 bg-black/20 p-1.5 rounded flex-wrap">
+                            <span className="text-slate-500 font-sans font-bold text-[7px] uppercase tracking-widest">POS</span>
                             <span className="text-slate-200 font-bold">{p.path[p.currentStep]}</span>
                             <span className="text-emerald-500">➔</span>
                             <span className="text-slate-200 font-bold">{currentTo}</span>
@@ -269,26 +268,26 @@ const App: React.FC = () => {
 
                           {/* Advanced Sector Control */}
                           {activeRoute && (
-                            <div className="p-3 rounded-xl bg-black/30 border border-white/5 relative overflow-hidden">
-                              <div className="flex justify-between items-center mb-3 relative z-10">
+                            <div className="p-2 rounded-lg bg-black/30 border border-white/5 relative overflow-hidden">
+                              <div className="flex justify-between items-center mb-2 relative z-10 flex-wrap gap-2">
                                 <button
                                   onClick={() => toggleRoute(activeRoute.from, activeRoute.to, 15)}
-                                  className={`text-[9px] font-bold px-3 py-1.5 rounded-lg border transition-all shadow-md active:scale-95 ${activeRoute.isBlocked
+                                  className={`text-[8px] font-bold px-2 py-1 rounded border transition-all shadow-md active:scale-95 ${activeRoute.isBlocked
                                     ? 'bg-red-500/20 border-red-500/50 text-red-400 shadow-[0_0_10px_rgba(239,68,68,0.2)]'
                                     : 'bg-slate-800/80 border-white/10 text-slate-300 hover:bg-slate-700 hover:text-white'
                                     }`}
                                 >
-                                  {activeRoute.isBlocked ? 'SECTOR LOCKED' : 'CLOSE SECTOR'}
+                                  {activeRoute.isBlocked ? 'LOCKED' : 'CLOSE SEC.'}
                                 </button>
-                                <div className="flex gap-2 items-center">
+                                <div className="flex gap-1.5 items-center">
                                   <button
                                     onClick={() => handleAIAnalyzeRoute(p.id, activeRoute.from, activeRoute.to)}
                                     disabled={routeAnalysis[`${p.id}-${activeRoute.from}-${activeRoute.to}`]?.loading}
-                                    className="text-[9px] font-bold px-3 py-1.5 bg-indigo-500/20 hover:bg-indigo-500/40 text-indigo-300 rounded-lg border border-indigo-500/30 transition-all disabled:opacity-50 shadow-md active:scale-95"
+                                    className="text-[8px] font-bold px-2 py-1 bg-indigo-500/20 hover:bg-indigo-500/40 text-indigo-300 rounded border border-indigo-500/30 transition-all disabled:opacity-50 shadow-md active:scale-95"
                                   >
-                                    {routeAnalysis[`${p.id}-${activeRoute.from}-${activeRoute.to}`]?.loading ? 'ANALYZING...' : '✨ AI EVAL'}
+                                    {routeAnalysis[`${p.id}-${activeRoute.from}-${activeRoute.to}`]?.loading ? '...' : '✨ EVAL'}
                                   </button>
-                                  <span className="text-[10px] font-mono font-bold text-slate-400 bg-black/50 px-2 py-1 rounded-md">x{activeRoute.congestion}</span>
+                                  <span className="text-[9px] font-mono font-bold text-slate-400 bg-black/50 px-1.5 py-0.5 rounded">x{activeRoute.congestion}</span>
                                 </div>
                               </div>
                               <div className="relative z-10 px-1">
@@ -313,7 +312,6 @@ const App: React.FC = () => {
                     })}
                   </div>
                 </section>
-
               </>
             ) : (
               <>
@@ -338,9 +336,9 @@ const App: React.FC = () => {
 
                 {/* 4. SYSTEM EVENT LOG */}
                 <section className="bg-slate-900/30 backdrop-blur-xl rounded-3xl border border-white/10 p-4 overflow-y-auto custom-scrollbar flex-1 shadow-2xl relative">
-                  <h2 className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400 mb-4 sticky top-0 bg-slate-950/80 backdrop-blur-md z-10 py-2 px-1 rounded-lg -mt-2 flex justify-between items-center">
-                    <span>System Event Log</span>
-                    {isAnalyzing && <span className="text-sky-400 animate-pulse text-[8px] bg-sky-500/10 px-2 py-1 rounded border border-sky-500/20">AI ANALYZING...</span>}
+                  <h2 className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400 mb-4 sticky top-0 bg-slate-950/80 backdrop-blur-md z-10 py-2 px-2 rounded-lg -mt-2 flex flex-col 2xl:flex-row justify-between items-start 2xl:items-center gap-2">
+                    <span className="whitespace-nowrap">System Event Log</span>
+                    {isAnalyzing && <span className="text-sky-400 animate-pulse text-[8px] bg-sky-500/10 px-2 py-1 rounded border border-sky-500/20 whitespace-nowrap">AI ANALYZING...</span>}
                   </h2>
                   <div className="space-y-1.5">
                     {events.length === 0 ? (
@@ -350,9 +348,9 @@ const App: React.FC = () => {
                         <div key={ev.id} className="text-[10px] font-mono flex items-start gap-3 py-2 border-b border-white/5 last:border-0 hover:bg-white/5 rounded-lg px-2 transition-colors">
                           <span className="text-slate-500 shrink-0 select-none">[{new Date(ev.timestamp).toLocaleTimeString()}]</span>
                           <span className={`font-bold shrink-0 ${ev.type.includes('COLLISION') ? 'text-red-400' :
-                              ev.type.includes('REROUTE') ? 'text-amber-400' :
-                                ev.type.includes('SECTOR') ? 'text-orange-400' :
-                                  'text-emerald-400'
+                            ev.type.includes('REROUTE') ? 'text-amber-400' :
+                              ev.type.includes('SECTOR') ? 'text-orange-400' :
+                                'text-emerald-400'
                             }`}>
                             {ev.type}
                           </span>
@@ -368,9 +366,13 @@ const App: React.FC = () => {
         </div>
       </main>
 
-      {/* 4. Background Radar Sweep Effect */}
-      <div className="fixed bottom-0 left-0 w-[800px] h-[800px] bg-emerald-500/5 rounded-full blur-[120px] pointer-events-none -ml-[400px] -mb-[400px] opacity-50" />
-      <div className="fixed top-0 right-0 w-[600px] h-[600px] bg-sky-500/5 rounded-full blur-[100px] pointer-events-none -mr-[300px] -mt-[300px] opacity-50" />
+      {/* 4. Background Ambient Glows (Optimized) */}
+      <div
+        className="fixed inset-0 pointer-events-none z-0"
+        style={{
+          background: 'radial-gradient(circle at 10% 90%, rgba(16,185,129,0.05) 0%, transparent 50%), radial-gradient(circle at 90% 10%, rgba(14,165,233,0.05) 0%, transparent 50%)'
+        }}
+      />
     </div>
   );
 };
