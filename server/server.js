@@ -77,6 +77,12 @@ app.post('/api/agent', async (req, res) => {
 });
 
 const PORT = process.env.PORT || 3001;
-app.listen(PORT, () => {
-    console.log(`ATC Groq AI Proxy Server running on port ${PORT}`);
-});
+
+// Only start the server if we're running locally
+if (process.env.NODE_ENV !== 'production') {
+    app.listen(PORT, () => {
+        console.log(`ATC Groq AI Proxy Server running on port ${PORT}`);
+    });
+}
+
+export default app;
