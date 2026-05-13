@@ -20,3 +20,25 @@ export interface Plane {
   isColliding?: boolean; // For visual warning
   isHolding?: boolean;
 }
+
+export type EventType = 
+  | 'SYSTEM_START'
+  | 'PLANE_SPAWNED'
+  | 'PLANE_LANDED'
+  | 'REROUTE_EXECUTED'
+  | 'SECTOR_CLOSED'
+  | 'SECTOR_OPENED'
+  | 'CONGESTION_CHANGED'
+  | 'COLLISION_DETECTED'
+  | 'HOLD_ENABLED'
+  | 'HOLD_DISABLED'
+  | 'EXPERT_SYSTEM'
+  | 'AI_STRATEGY';
+
+export interface SimulationEvent {
+  id: string;
+  timestamp: number;
+  type: EventType;
+  message: string;
+  metadata?: any;
+}
