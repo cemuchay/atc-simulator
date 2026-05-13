@@ -11,7 +11,7 @@ interface MapProps {
   onPlaneClick?: (id: string) => void;
 }
 
-export const Map: React.FC<MapProps> = ({ airports, routes, planes, sectorRisks, onPlaneClick }) => {
+export const Map = React.memo<MapProps>(({ airports, routes, planes, sectorRisks, onPlaneClick }) => {
   // Helper to find airport coordinates quickly
   const getAirport = (id: string) => airports.find((a) => a.id === id);
 
@@ -36,23 +36,22 @@ export const Map: React.FC<MapProps> = ({ airports, routes, planes, sectorRisks,
 
             return (
               <g key={`route-${i}`}>
-                {/* Risk Halo */}
+                {/* Risk Halo (Simplified) */}
                 {isHotspot && !route.isBlocked && (
                   <line
                     x1={start?.x} y1={start?.y}
                     x2={end?.x} y2={end?.y}
-                    className="stroke-red-500/20 stroke-[12px] blur-[2px] animate-pulse"
+                    className="stroke-red-500/10 stroke-[10px]"
                   />
                 )}
                 <line
                   x1={start?.x} y1={start?.y}
                   x2={end?.x} y2={end?.y}
-                  className={`transition-all duration-500 ${route.isBlocked
+                  className={`${route.isBlocked
                     ? "stroke-red-600/40 stroke-[3px] stroke-dash-2"
                     : `${riskColor} stroke-[1.5px]`
                     }`}
                   style={{
-                    // Dynamic width based on congestion in Tailwind 4.2
                     strokeWidth: route.isBlocked ? 3 : 1 + (route.congestion || 1) * 0.5
                   }}
                 />
@@ -80,7 +79,7 @@ export const Map: React.FC<MapProps> = ({ airports, routes, planes, sectorRisks,
                 cx={airport.x}
                 cy={airport.y}
                 r={6}
-                className="fill-slate-900 stroke-sky-400 stroke-2 group-hover:fill-sky-400 transition-colors"
+                className="fill-slate-900 stroke-sky-400 stroke-2"
               />
               <text
                 x={airport.x}
@@ -102,18 +101,15 @@ export const Map: React.FC<MapProps> = ({ airports, routes, planes, sectorRisks,
 
             if (!fromNode || !toNode) return null;
 
-            // Linear interpolation for current position
             const planeX = fromNode.x + (toNode.x - fromNode.x) * plane.progress;
             const planeY = fromNode.y + (toNode.y - fromNode.y) * plane.progress;
-
-            // Calculate rotation angle for the plane icon
             const angle = Math.atan2(toNode.y - fromNode.y, toNode.x - fromNode.x) * (180 / Math.PI);
 
             return (
               <g
                 key={plane.id}
                 transform={`translate(${planeX}, ${planeY})`}
-                className="cursor-pointer transition-colors hover:opacity-80"
+                className="cursor-pointer"
                 onClick={() => onPlaneClick?.(plane.id)}
                 style={{ willChange: 'transform' }}
               >
@@ -121,25 +117,23 @@ export const Map: React.FC<MapProps> = ({ airports, routes, planes, sectorRisks,
                 <g transform={plane.isHolding ? `scale(1.5)` : `rotate(${angle})`}>
                   <path
                     d="M-6,-6 L8,0 L-6,6 L-3,0 Z"
-                    className={`transition-colors duration-300 ${plane.isColliding ? 'fill-red-500 animate-ping' : plane.isHolding ? 'fill-amber-500' : 'fill-amber-400'}`}
+                    className={`${plane.isColliding ? 'fill-red-500' : plane.isHolding ? 'fill-amber-500' : 'fill-amber-400'}`}
                   />
                 </g>
                 {/* Flight Tag */}
                 <text
                   x={12}
                   y={-12}
-                  className={`${plane.isColliding ? 'fill-red-500' : 'fill-amber-400'} text-[12px] font-mono font-black transition-colors duration-300`}
+                  className={`${plane.isColliding ? 'fill-red-500' : 'fill-amber-400'} text-[12px] font-mono font-black`}
                 >
                   {plane.id}
                 </text>
-                {/* Proximity Halo (Radar Effect) */}
+                {/* Proximity Halo (Radar Effect) - Simplified */}
                 <circle
                   r={plane.isHolding ? 16 : 12}
-                  className={`${plane.isColliding ? 'fill-red-500/50 animate-pulse' : plane.isHolding ? 'fill-amber-500/40' : 'fill-amber-400/20 animate-ping'} transition-all duration-300`}
+                  className={`${plane.isColliding ? 'fill-red-500/30' : plane.isHolding ? 'fill-amber-500/20' : 'fill-amber-400/10'}`}
                 />
               </g>
-
-
             );
           })}
         </g>
@@ -154,7 +148,7 @@ export const Map: React.FC<MapProps> = ({ airports, routes, planes, sectorRisks,
           <span className="w-2 h-2 rounded-full bg-amber-400" /> Active Flight
         </div>
         <div className="flex items-center gap-2">
-          <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse" /> Risk Hotspot
+          <span className="w-2 h-2 rounded-full bg-red-500" /> Risk Hotspot
         </div>
         <div className="flex items-center gap-2">
           <span className="w-2 h-2 bg-red-600" /> Blocked Path
@@ -162,4 +156,4 @@ export const Map: React.FC<MapProps> = ({ airports, routes, planes, sectorRisks,
       </div>
     </div>
   );
-};
+});

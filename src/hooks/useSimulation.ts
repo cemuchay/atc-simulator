@@ -47,6 +47,7 @@ export const useSimulation = (
    const planesRef = useRef(planes);
    const requestRef = useRef<number>(0);
    const lastTimeRef = useRef<number>(0);
+   const lastRenderTimeRef = useRef<number>(0);
 
    useEffect(() => {
       routesRef.current = routes;
@@ -241,6 +242,13 @@ export const useSimulation = (
    // --- 3. THE COLLISION & ANIMATION ENGINE ---
    const animate = useCallback(
       (time: number) => {
+         if (time - lastRenderTimeRef.current < 33) {
+            // eslint-disable-next-line react-hooks/immutability
+            requestRef.current = requestAnimationFrame(animate);
+            return;
+         }
+         lastRenderTimeRef.current = time;
+
          if (isPaused || gameOver) {
             lastTimeRef.current = 0;
             // eslint-disable-next-line react-hooks/immutability

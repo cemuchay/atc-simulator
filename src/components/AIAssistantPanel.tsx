@@ -10,7 +10,7 @@ interface Props {
     sectorRisks: SectorRisk[];
 }
 
-export const AIAssistantPanel: React.FC<Props> = ({ planes, routes, events, sectorRisks }) => {
+export const AIAssistantPanel = React.memo<Props>(({ planes, routes, events, sectorRisks }) => {
     const [messages, setMessages] = useState<{ role: 'user' | 'ai', text: string }[]>([]);
     const [input, setInput] = useState('');
     const [isLoading, setIsLoading] = useState(false);
@@ -114,4 +114,4 @@ Be concise, professional, and use ATC terminology. Do not hallucinate data. If y
             </form>
         </div>
     );
-};
+});
